@@ -1,5 +1,3 @@
 ServerAsync.class
-tester.class
+myutils/AsyncStub.class
 TesterAsync.class
-server.class
-serverWorker.class
