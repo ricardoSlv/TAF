@@ -1,5 +1,6 @@
 package myutils;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,6 +15,7 @@ public class AsyncStub {
   int serverp2;
   ScheduledExecutorService es;
   NettyMessagingService ms;
+  ArrayList<String> msgList;
 
   public AsyncStub(final int port, final int serverp1, final int serverp2) {
     this.serverp1 = serverp1;
@@ -36,6 +38,7 @@ public class AsyncStub {
 
     String customType = port + "" + number + " " + operation;
     byte[] operationMsg = (port + "" + number + " " + accountMovement).getBytes();
+    this.msgList = new ArrayList<String>();
 
     Boolean[] active = { true };
     ms.registerHandler(customType, (address, msg) -> {
@@ -48,6 +51,7 @@ public class AsyncStub {
       }
     }, es);
 
+    msgList.add(customType);
     ms.sendAsync(Address.from("localhost", serverp1), operation, operationMsg);
     ms.sendAsync(Address.from("localhost", serverp2), operation, operationMsg);
 

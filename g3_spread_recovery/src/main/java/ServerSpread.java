@@ -24,6 +24,7 @@ public class ServerAsync {
 
     String result = "";
     System.out.println(message);
+
     if (messageBits[0].equals("state")) {
       if (active[0] == false) {
         int stateReceived = Integer.parseInt(messageBits[1]);
@@ -98,7 +99,7 @@ public class ServerAsync {
           rep.addGroup(newMember);
           try {
             // Check if im an active member or i'm alone, wich are the cases where i should
-            // transfer my state
+            // transfer my state (activate peer, self activation)
             if (members.length > 1 && active[0] || members.length == 1)
               conn.multicast(rep);
           } catch (SpreadException e) {
