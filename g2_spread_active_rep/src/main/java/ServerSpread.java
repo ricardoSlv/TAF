@@ -33,7 +33,6 @@ public class ServerAsync {
         byte[] data = msg.getData();
         String message = new String(data, StandardCharsets.UTF_8);
         String[] messageBits = message.split(" ");
-        SpreadMessage rep = new SpreadMessage();
 
         String result = "";
         if (messageBits[1].equals("balance")) {
@@ -49,6 +48,7 @@ public class ServerAsync {
           }
         }
 
+        SpreadMessage rep = new SpreadMessage();
         String resp = messageBits[0] + " " + result;
         rep.setData(resp.getBytes(StandardCharsets.UTF_8));
         rep.setReliable();
