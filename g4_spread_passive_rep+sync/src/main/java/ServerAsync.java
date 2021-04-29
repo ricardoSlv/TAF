@@ -48,6 +48,7 @@ public class ServerAsync {
       @Override
       public void regularMessageReceived(SpreadMessage msg) {
         if (imTheleader[0]) {
+          // Receiving my own safe message means every member os the group has already received it also
           String[] msgParts = new String(lastMsg[0], StandardCharsets.UTF_8).split(" ");
           String msgID = msgParts[0];
           ms.sendAsync(lastMsgAddress[0], msgID + " echo", Integer.toString(money[0]).getBytes()).exceptionally(t -> {
@@ -78,9 +79,9 @@ public class ServerAsync {
           if (ancestors.size() == 0 && imTheleader[0] == false) {
             imTheleader[0] = true;
             System.out.println("I'm the leader");
+
             ms.start();
             ms.registerHandler("echo", (address, msge) -> {
-
               lastMsg[0] = msge;
               lastMsgAddress[0] = address;
               SpreadMessage rep = new SpreadMessage();
