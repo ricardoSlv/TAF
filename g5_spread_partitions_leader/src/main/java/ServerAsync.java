@@ -31,7 +31,6 @@ class ElectionManager {
     this.maxSeqNumber = -1;
     this.groupMembers = new ArrayList<>();
     System.out.println(members);
-    // TODO: members is null :^/
     for (SpreadGroup m : members)
       this.groupMembers.add(m.toString());
     this.completedElements = 0;
@@ -42,10 +41,10 @@ class ElectionManager {
     String member = spreadmember.toString();
     // Wins by seqnumber, solves draws by name
     if (seqnumber > maxSeqNumber || (seqnumber == maxSeqNumber && member.compareTo(currLeader) > 0)) {
-      maxSeqNumber = seqnumber;
-      currLeader = member;
-      completedElements++;
+      this.maxSeqNumber = seqnumber;
+      this.currLeader = member;
     }
+    this.completedElements++;
   }
 
   public Boolean isFinished() {
@@ -64,7 +63,7 @@ class SimpleMessage {
   public SimpleMessage(byte[] bytes) {
     String[] msgParts = (new String(bytes, StandardCharsets.UTF_8)).split(" ");
     this.topic = msgParts[0];
-    this.value = msgParts[0];
+    this.value = msgParts[1];
   }
 
   public SimpleMessage(String topic, int value) {
@@ -86,7 +85,7 @@ class SimpleMessage {
 
   @Override
   public String toString() {
-    return topic + " " + value;
+    return this.topic + " " + this.value;
   }
 
   public byte[] toBytes() {
@@ -172,12 +171,18 @@ public class ServerAsync {
         SimpleMessage readableMsg = new SimpleMessage(msg.getData());
 
         if (readableMsg.isElection()) {
+          System.out.println(readableMsg.toString());
           elManager.processElement(msg.getSender(), readableMsg.intValue());
           // I won the election
-          if (elManager.isFinished() && elManager.getLeader().equals(conn.getPrivateGroup().toString())) {
-            imTheleader[0] = true;
-            System.out.println("Im the leader " + seqnumber[0]);
-            startClientService(ms, es, conn, seqnumber, lastMsg, lastMsgAddress);
+          if (elManager.isFinished()) {
+            System.out.println("Election finished, leader is: " + elManager.getLeader());
+
+            // Set myself to leader if i am not already
+            if (elManager.getLeader().equals(conn.getPrivateGroup().toString()) && imTheleader[0] == false) {
+              imTheleader[0] = true;
+              System.out.println("Im the leader " + seqnumber[0]);
+              startClientService(ms, es, conn, seqnumber, lastMsg, lastMsgAddress);
+            }
           }
         } else if (readableMsg.isState()) {
           if (imTheleader[0]) {
@@ -194,17 +199,22 @@ public class ServerAsync {
       @Override
       public void membershipMessageReceived(SpreadMessage msg) {
         MembershipInfo info = msg.getMembershipInfo();
-        if (info.isTransition()) {
-          elManager.startElection(info.getMembers());
+        if (info.isRegularMembership()) {
+          if (info.getMembers().length > (totalMembers / 2)) {
+            elManager.startElection(msg.getGroups());
 
-          int electionNumber = imTheleader[0] ? 99999999 : seqnumber[0];
-          SimpleMessage electionMsg = new SimpleMessage("election", electionNumber);
-          sendSpreadSafeMsg(conn, electionMsg, "servers");
+            System.out.println(msg.getGroups().length);
+            for (SpreadGroup m : msg.getGroups())
+              System.out.println(m.toString());
+            System.out.println(info.getGroup());
 
-          if (imTheleader[0] && (info.getMembers().length < (totalMembers / 2))) {
+            int electionNumber = imTheleader[0] ? 99999999 : seqnumber[0];
+            SimpleMessage electionMsg = new SimpleMessage("election", electionNumber);
+            sendSpreadSafeMsg(conn, electionMsg, "servers");
+          } else if (imTheleader[0]) {
             imTheleader[0] = false;
+            System.out.println("I'm no longer the leader");
             stopClientService(ms);
-            startClientService(ms, es, conn, seqnumber, lastMsg, lastMsgAddress);
           }
         }
       }

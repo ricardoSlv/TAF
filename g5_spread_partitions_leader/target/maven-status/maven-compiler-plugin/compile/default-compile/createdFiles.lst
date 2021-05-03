@@ -1,3 +1,6 @@
 ServerAsync.class
+ServerAsync$1.class
 myutils/AsyncStub.class
 TesterAsync.class
+SimpleMessage.class
+ElectionManager.class
